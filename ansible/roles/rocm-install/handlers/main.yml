@@ -1,0 +1,6 @@
+---
+- name: restart system
+  command: shutdown -r now "Ansible applied changes"
+  async: 0
+  poll: 0
+  ignore_errors: yes

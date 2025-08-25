@@ -1,0 +1,59 @@
+- name: Create ROCm GPG key directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download and install ROCm GPG key
+  get_url:
+    url: https://repo.radeon.com/rocm/rocm.gpg.key
+    dest: /tmp/rocm.gpg.key
+    mode: '0644'
+
+- name: Add ROCm GPG key to trusted keys
+  shell: |
+    gpg --dearmor < /tmp/rocm.gpg.key | tee /etc/apt/keyrings/rocm.gpg > /dev/null
+  args:
+    creates: /etc/apt/keyrings/rocm.gpg
+
+- name: Download amdgpu-install package
+  get_url:
+    url: "https://repo.radeon.com/amdgpu-install/{{ rocm_version }}/ubuntu/jammy/amdgpu-install_{{ amdgpu_install_version }}_all.deb"
+    dest: "/tmp/amdgpu-install_{{ amdgpu_install_version }}_all.deb"
+    mode: '0644'
+
+- name: Install amdgpu-install package
+  apt:
+    deb: "/tmp/amdgpu-install_{{ amdgpu_install_version }}_all.deb"
+    state: present
+
+- name: Update apt cache after adding repositories
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install ROCm using amdgpu-install
+  command: amdgpu-install -y --usecase=rocm,graphics --no-32
+  args:
+    creates: /opt/rocm
+
+- name: Set HSA override for RX 5700
+  lineinfile:
+    path: /etc/environment
+    line: 'HSA_OVERRIDE_GFX_VERSION=10.3.0'
+    state: present
+    create: yes
+
+- name: Add user to required groups
+  user:
+    name: packer
+    groups: render,video
+    append: yes
+
+- name: Clean up temporary files
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/rocm.gpg.key
+    - "/tmp/amdgpu-install_{{ amdgpu_install_version }}_all.deb"

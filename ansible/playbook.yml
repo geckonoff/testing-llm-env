@@ -1,0 +1,35 @@
+- name: Configure Ubuntu for ROCm
+  hosts: all
+  become: yes
+  vars:
+    rocm_version: "5.7.3"
+    amdgpu_install_version: "5.7.50703-1"
+
+  pre_tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install basic packages
+      apt:
+        name:
+          - vim
+          - zsh
+          - qemu-guest-agent
+          - build-essential
+          - python3
+          - python3-pip
+          - git
+          - wget
+          - gpg
+        state: present
+
+  roles:
+    - role: rocm-install
+
+  post_tasks:
+    - name: Clean up apt cache
+      apt:
+        autoclean: yes
+        autoremove: yes
