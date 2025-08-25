@@ -1,8 +1,3 @@
-variable "vm_name" {
-  type    = string
-  default = "packer-ubuntu-22.04-amd64"
-}
-
 packer {
   required_plugins {
     qemu = {
@@ -10,6 +5,25 @@ packer {
       source  = "github.com/hashicorp/qemu"
     }
   }
+}
+
+variable "ROCMVER" {
+  type    = string
+  default = "5.4.6"
+}
+
+variable "AMDGPUVER" {
+  type    = string
+  default = "5.4.50406-1"
+}
+
+variable "vm_name" {
+  type    = string
+  default = ""
+}
+
+locals {
+  computed_vm_name = var.vm_name != "" ? var.vm_name : "packer-ubuntu-22.04-rocm-${var.ROCMVER}-amd64"
 }
 
 variable "iso_url" {
@@ -28,7 +42,7 @@ source "qemu" "macos" {
   iso_checksum      = var.iso_checksum
   disk_image        = true
   format            = "qcow2"
-  output_directory  = "build/${var.vm_name}"
+  output_directory  = "build/${local.computed_vm_name}"
   machine_type      = "q35"
   accelerator       = "hvf"
   cpus              = 4
@@ -49,7 +63,7 @@ build {
   provisioner "ansible" {
     playbook_file = "./ansible/playbook.yml"
     extra_arguments = [
-      "--extra-vars", "ansible_ssh_pass=packer ansible_become_pass=packer"
+      "--extra-vars", "ansible_ssh_pass=packer ansible_become_pass=packer rocm_version=${var.ROCMVER} amdgpu_install_version=${var.AMDGPUVER}"
     ]
     user = "packer"
   }

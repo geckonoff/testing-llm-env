@@ -1,9 +1,9 @@
 - name: Configure Ubuntu for ROCm
   hosts: all
   become: yes
-  vars:
-    rocm_version: "5.7.3"
-    amdgpu_install_version: "5.7.50703-1"
+  # vars:
+  #   rocm_version: "5.7.3"
+  #   amdgpu_install_version: "5.7.50703-1"
 
   pre_tasks:
     - name: Update apt cache
