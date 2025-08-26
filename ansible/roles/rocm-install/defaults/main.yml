@@ -1,4 +1,4 @@
 ---
 rocm_version: "5.7.3"
 amdgpu_install_version: "5.7.50703-1"
-amdgpu_install_url: "https://repo.radeon.com/amdgpu-install/{{ rocm_version }}/ubuntu/focal/amdgpu-install_{{ amdgpu_install_version }}_all.deb"
+amdgpu_install_url: "https://repo.radeon.com/amdgpu-install/{{ rocm_version }}/ubuntu/focal{{ ubuntu_name }}/amdgpu-install_{{ amdgpu_install_version }}_all.deb"

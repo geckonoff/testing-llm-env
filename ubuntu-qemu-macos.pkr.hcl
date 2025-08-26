@@ -9,40 +9,46 @@ packer {
 
 variable "ROCMVER" {
   type    = string
-  default = "5.4.6"
+  default = "5.7.1"
 }
 
 variable "AMDGPUVER" {
   type    = string
-  default = "5.4.50406-1"
+  default = "5.7.50701-1"
 }
 
-variable "vm_name" {
+variable "UBNAME" {
+  type    = string
+  default = "focal"
+}
+
+variable "UBNUM" {
+  type    = string
+  default = "20.04"
+}
+
+variable "VM_NAME" {
   type    = string
   default = ""
 }
 
-locals {
-  computed_vm_name = var.vm_name != "" ? var.vm_name : "packer-ubuntu-22.04-rocm-${var.ROCMVER}-amd64"
+variable "ISO_URL" {
+  type    = string
+  default = ""
 }
 
-variable "iso_url" {
+variable "ISO_CHECKSUM" {
   type    = string
-  default = "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img"
-}
-
-variable "iso_checksum" {
-  type    = string
-  default = "file:https://cloud-images.ubuntu.com/releases/22.04/release/SHA256SUMS"
+  default = ""
 }
 
 source "qemu" "macos" {
-  vm_name           = var.vm_name
-  iso_url           = var.iso_url
-  iso_checksum      = var.iso_checksum
+  vm_name           = var.VM_NAME
+  iso_url           = var.ISO_URL
+  iso_checksum      = var.ISO_CHECKSUM
   disk_image        = true
   format            = "qcow2"
-  output_directory  = "build/${local.computed_vm_name}"
+  output_directory  = "build/${var.VM_NAME}"
   machine_type      = "q35"
   accelerator       = "hvf"
   cpus              = 4
@@ -63,7 +69,7 @@ build {
   provisioner "ansible" {
     playbook_file = "./ansible/playbook.yml"
     extra_arguments = [
-      "--extra-vars", "ansible_ssh_pass=packer ansible_become_pass=packer rocm_version=${var.ROCMVER} amdgpu_install_version=${var.AMDGPUVER}"
+      "--extra-vars", "ansible_ssh_pass=packer ansible_become_pass=packer rocm_version=${var.ROCMVER} amdgpu_install_version=${var.AMDGPUVER} ubuntu_name=${var.UBNAME} ubuntu_num=${var.UBNUM}"
     ]
     user = "packer"
   }
