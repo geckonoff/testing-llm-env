@@ -1,5 +1,3 @@
-Certainly! Here's the **fully rewritten README in English**, incorporating all your requirements: Packer + QEMU + macOS Hypervisor.Framework, cloud-init, Ansible, ROCm installation, variable overrides, and clear build instructions.
-
 ---
 
 # 📦 Ubuntu + ROCm Image Builder with Packer & QEMU (macOS HVF)
