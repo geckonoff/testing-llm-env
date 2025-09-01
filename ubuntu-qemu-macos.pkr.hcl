@@ -43,7 +43,7 @@ variable "ISO_CHECKSUM" {
 }
 
 source "qemu" "macos" {
-  vm_name           = var.VM_NAME
+  vm_name           = "${var.VM_NAME}.qcow2"
   iso_url           = var.ISO_URL
   iso_checksum      = var.ISO_CHECKSUM
   disk_image        = true
