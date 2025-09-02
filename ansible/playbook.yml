@@ -44,7 +44,8 @@
                 - to: default
                   via: {{ gateway }}
               nameservers:
-                addresses: {{ dns_servers }}
+                addresses:
+                  - {{ dns_servers }}
       dest: /etc/netplan/01-static-network.yaml
       mode: '0644'
       owner: root
