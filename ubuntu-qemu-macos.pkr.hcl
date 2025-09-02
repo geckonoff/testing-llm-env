@@ -42,6 +42,22 @@ variable "ISO_CHECKSUM" {
   default = ""
 }
 
+variable "STIP" {
+  type    = string
+  default = "192.168.122.101"
+}
+
+variable "GW" {
+  type    = string
+  default = "192.168.122.1"
+}
+
+variable "DNS" {
+  type    = string
+  default = "192.168.178.1"
+  description = "DNS servers for static network configuration"
+}
+
 source "qemu" "macos" {
   vm_name           = "${var.VM_NAME}.qcow2"
   iso_url           = var.ISO_URL
@@ -69,8 +85,23 @@ build {
   provisioner "ansible" {
     playbook_file = "./ansible/playbook.yml"
     extra_arguments = [
-      "--extra-vars", "ansible_ssh_pass=packer ansible_become_pass=packer rocm_version=${var.ROCMVER} amdgpu_install_version=${var.AMDGPUVER} ubuntu_name=${var.UBNAME} ubuntu_num=${var.UBNUM}"
+      "--extra-vars", "ansible_ssh_pass=packer ansible_become_pass=packer rocm_version=${var.ROCMVER} amdgpu_install_version=${var.AMDGPUVER} ubuntu_name=${var.UBNAME} ubuntu_num=${var.UBNUM} static_ip=${var.STIP} gateway=${var.GW} dns_servers=${var.DNS}"
     ]
     user = "packer"
+  }
+
+  # === Post-processor: изменяем владельца и права ===
+  post-processors {
+    post-processor "shell-local" {
+      inline = [
+        "echo 'Fixing ownership and permissions for nfsuser...'",
+        "sudo chown -R nfsuser:1001 build/${var.VM_NAME}",
+        "sudo chmod -R 777 build/${var.VM_NAME}",
+        "sudo chmod 664 build/${var.VM_NAME}/*.qcow2"
+      ]
+
+      # Выполнять только если нужно (опционально)
+      only = ["qemu.macos"]
+    }
   }
 }

@@ -29,7 +29,52 @@
     - role: rocm-install
 
   post_tasks:
-    - name: Clean up apt cache
-      apt:
-        autoclean: yes
-        autoremove: yes
+  # --- Настройка сети ---
+  - name: Configure static network for enp1s0
+    copy:
+      content: |
+        # Configured by Packer/Ansible (do not edit manually)
+        network:
+          version: 2
+          ethernets:
+            enp1s0:
+              addresses:
+                - {{ static_ip }}/24
+              routes:
+                - to: default
+                  via: {{ gateway }}
+              nameservers:
+                addresses: {{ dns_servers }}
+      dest: /etc/netplan/01-static-network.yaml
+      mode: '0644'
+      owner: root
+      group: root
+
+  # --- Запретить vfio-pci (чтобы amdgpu мог взять GPU) ---
+  - name: Blacklist vfio-pci to allow amdgpu to control the GPU
+    copy:
+      content: |
+        # Blacklist vfio-pci to prevent it from claiming AMD GPU
+        blacklist vfio-pci
+      dest: /etc/modprobe.d/blacklist-vfio-pci.conf
+      mode: '0644'
+      owner: root
+      group: root
+
+  # --- Убедиться, что amdgpu загружается при старте ---
+  - name: Ensure amdgpu is in /etc/modules
+    lineinfile:
+      path: /etc/modules
+      line: amdgpu
+      state: present
+
+  # --- Обновить initramfs, чтобы включить amdgpu и blacklist ---
+  - name: Update initramfs to include amdgpu and blacklist vfio-pci
+    command: update-initramfs -u
+
+  # --- Очистка кэша APT ---
+  - name: Clean up apt cache
+    apt:
+      autoclean: yes
+      autoremove: yes
+    tags: cleanup
